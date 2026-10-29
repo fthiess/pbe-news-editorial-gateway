@@ -1,6 +1,6 @@
 # PBE News Editorial Gateway ("Gateway") — Product Requirements Document
 
-**Status:** Draft 1, 2026-10-29. Requirements only; *how* each one is met belongs to the engineering design, which comes next. Decisions cited as `D<n>` are in [`DECISIONS.md`](../DECISIONS.md), which is authoritative where this document and the log disagree.
+**Status:** Draft 1, 2026-10-29. Requirements only; *how* each one is met belongs to the engineering design, which comes next. Decisions cited as `D<n>` are in [`DECISIONS.md`](DECISIONS.md), which is authoritative where this document and the log disagree.
 
 ---
 
