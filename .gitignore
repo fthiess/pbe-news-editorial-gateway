@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Parallel-session worktrees. CLAUDE.md tells sessions to create them here, so
+# without this the main checkout carries a nested repo as an untracked entry.
+.claude/worktrees/
+
+# Local secrets and environment overrides. Real credentials live only in GCP
+# Secret Manager; nothing secret is ever committed (the repo is public).
+.env
+.env.*
+!.env.example
+
+# Build and test output
+dist/
+build/
+coverage/
+*.tsbuildinfo
