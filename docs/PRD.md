@@ -1,6 +1,6 @@
 # PBE News Editorial Gateway ("Gateway") — Product Requirements Document
 
-**Status:** Draft 1, 2026-10-29. Requirements only; *how* each one is met belongs to the engineering design, which comes next. Decisions cited as `D<n>` are in [`DECISIONS.md`](DECISIONS.md), which is authoritative where this document and the log disagree.
+**Status:** Draft 2, 2026-10-30. On hold until the Fall 2026 issue is published; the target is editorial production for the **Spring 2027** issue (D17). Requirements only; *how* each one is met belongs to the engineering design, which follows when work resumes. Decisions cited as `D<n>` are in [`DECISIONS.md`](DECISIONS.md), which is authoritative where this document and the log disagree.
 
 ---
 
@@ -45,7 +45,7 @@ These are Forrest's conventions. The assistant editor applies them; the Gateway 
 
 ### 3.1 Goals
 
-1. **Save Forrest real editing time on the Fall 2026 issue.** The two largest time sinks, name canonicalization with Book profile links and image alt text, must work end to end through the Gateway before editing of that issue begins (D15).
+1. **Be in editorial production for the Spring 2027 issue, and save Forrest real time over his Fall 2026 workflow.** The two largest time sinks, name canonicalization with Book profile links and image alt text, must work end to end through the Gateway, directly on drafts in Ghost, with no copying and pasting (D15, D17).
 2. **Make the safe thing structural.** No Claude client, however it is prompted, can publish, unpublish, schedule, delete, send email, or change anything that isn't a draft.
 3. **Keep the credential out of every session.** The Ghost token is never visible to a model, a chat transcript, a tool result, a log line or the repository.
 4. **One interface for every client.** The same operations serve Claude Code, claude.ai, Duet, Routines and, later, the Linter.
@@ -66,47 +66,44 @@ These are Forrest's conventions. The assistant editor applies them; the Gateway 
 
 **Claude clients** act for a human editor, all through the one Claude Ghost identity (D4, D6):
 
-| Client | Phase | Typical use |
-|---|---|---|
-| Claude Code (desktop app) | A (MVP) | Interactive editing sessions with Forrest: names, alt text, other edits on request. |
-| claude.ai (web) | B | The same, from a browser. |
-| Claude Duet | B | Proactive assistant editor: intake from Forrest's email, noticing changes, proposing next steps. |
-| Cloud Routines | B | Scheduled or unattended runs, such as an overnight TK list. |
+| Client | Typical use |
+|---|---|
+| Claude Code (desktop app) | Interactive editing sessions with Forrest: names, alt text, other edits on request. |
+| claude.ai (web) | The same, from a browser. |
+| Claude Duet | Proactive assistant editor: intake from Forrest's email, noticing changes, proposing next steps. |
+| Cloud Routines | Scheduled or unattended runs, such as an overnight TK list. |
 
-**The PBE News Linter** is a later, programmatic client (D2). It is deterministic program that applies mechanical fixes to drafts, including changes to conform to house style and canonicalizing brother names. It needs the same read and edit operations, under a non-human identity.
+**The PBE News Linter** is a later, programmatic client (D2). It is a deterministic program that applies mechanical fixes to drafts, including changes to conform to house style and canonicalizing brother names. It needs the same read and edit operations, under a non-human identity.
 
 ## 5. Driving use cases
 
 None of these is built *into* the Gateway, but each must be possible *through* it. They test the interface.
 
-1. **Name canonicalization (MVP).** Claude reads a draft, finds each mention of a brother, asks the Gateway which brothers match (e.g. given "Jim Smyth" returning "James Smyth '84" and "James Smith '32"), decides which brother is meant, and rewrites the mention in canonical form with a link to that brother's Book profile. This needs: read the article with precise addresses, Book lookup, and a structure-preserving "replace this text span with this linked text" edit.
-2. **Alt text and captions (MVP).** Claude finds every image in a draft, including the feature image, looks at each one, and writes alt text (and a caption, where one is missing and the context supplies it). This needs: read images as pictures, and set alt text and captions.
+1. **Name canonicalization.** Claude reads a draft, finds each mention of a brother, asks the Gateway which brothers match (e.g. given "Jim Smyth" returning "James Smyth '84" and "James Smith '32"), decides which brother is meant, and rewrites the mention in canonical form with a link to that brother's Book profile. This needs: read the article with precise addresses, Book lookup, and a structure-preserving "replace this text span with this linked text" edit.
+2. **Alt text and captions.** Claude finds every image in a draft, including the feature image, looks at each one, and writes alt text (and a caption, where one is missing and the context supplies it). This needs: read images as pictures, and set alt text and captions.
 3. **Edits on request.** Forrest asks for a change, Claude suggests wording, and Forrest says "yes, please make that change". On a draft, Claude makes it. On a published article, Forrest unpublishes it first and re-publishes it when the change is complete (D7). The MVP covers text-span replacement and metadata edits; general editing comes later.
-4. **Intake (stretch).** Claude reads a submission in Forrest's email, extracts the article as HTML, and creates a draft with its metadata: issue and section tags, slug, author, ordering date, and `[TK image: …]` markers where photos belong (D10, D11).
+4. **Intake.** Claude reads a submission in Forrest's email, extracts the article as HTML, and creates a draft with its metadata: issue and section tags, slug, author, ordering date, and `[TK image: …]` markers where photos belong (D10, D11).
 5. **TK list.** Claude reads all of an issue's drafts and lists every TK. This needs only reads.
 6. **Pre-publication readiness checks.** For example: the metadata is complete, conforms to standards, and matches the issue, there are no TKs, and every image has a caption and alt text. This needs only reads, but the reads must expose every field involved.
-7. **Noticing change (stretch).** Duet asks what changed since it last looked, and decides on a next step, such as offering to lint a new draft (D9).
+7. **Noticing change.** Duet asks what changed since it last looked, and decides on a next step, such as offering to lint a new draft (D9).
 
 ## 6. Scope and phasing
 
-The schedule (§10) leaves about eight working days of build before the Fall 2026 issue's editing starts. The MVP is therefore cut to what the two time sinks need, and the riskiest component, OAuth for claude.ai connectors, comes after the deadline (D15).
+The Gateway is not part of the Fall 2026 issue (D17). That issue uses two interim, manual workflows that don't touch Ghost's API: Forrest gets alt text by pasting images into Claude Haiku, and canonicalizes names with a small separate tool. Neither depends on the Gateway, and the Gateway doesn't depend on them. They do set the bar: the Gateway has to beat copying and pasting.
 
-**Phase A — MVP, for Fall 2026, Claude Code only:**
+With no build deadline before Fall 2026, the Gateway's earlier split into a Claude-Code-only Phase A and a connector Phase B no longer has a reason to exist, so the MVP is one release, for every Claude client (D17). The order things are built in is a matter for the coding plan.
+
+**MVP — in production for Spring 2027:**
 - Read posts and pages of every status, with all metadata (FR-1 to FR-4).
-- Read images as resized pictures (FR-5).
+- Read images as resized pictures (FR-5), and list possible authors (FR-6).
 - Draft edits: replace a text span, with or without a link (FR-10); set alt text and captions (FR-11); set metadata (FR-12).
+- Create a draft from HTML (FR-13).
 - The write policy and collision check (FR-20 to FR-26).
-- Book lookup (FR-30 to FR-32).
+- Book lookup (FR-30 to FR-32) and the change feed (FR-35).
 - Logging (FR-40 to FR-42).
-- Authentication of allow-listed Google identities (FR-50).
-- **Stretch:** create a draft from HTML (FR-13), the change feed (FR-35), author lookup (FR-6).
+- Authentication of allow-listed Google identities (FR-50), including as a claude.ai custom connector (FR-51), which brings Claude Code, Duet, web and Routines together.
 
-**Phase B — after the Fall 2026 issue is published:**
-- OAuth for claude.ai custom connectors (FR-51), bringing Duet, web and Routines.
-- Whatever Phase A stretch goals didn't make it.
-- A non-human identity for the Linter (FR-52).
-
-**Later:** general structure-preserving editing (moving, inserting and deleting blocks); image upload and placement (D11); webhooks (D9).
+**After the MVP:** a non-human identity for the Linter, once the Linter exists (FR-52); general structure-preserving editing (moving, inserting and deleting blocks); image upload and placement (D11); webhooks (D9).
 
 ## 7. Functional requirements
 
@@ -126,7 +123,7 @@ Requirement IDs are stable; gaps in the numbering leave room for later additions
 - **FR-10.** **Replace a text span.** Within one addressed text block, replace a specified span with new text, optionally carrying a link. Formatting outside the span, and every card in the article, stays untouched. This is the name-canonicalization edit.
 - **FR-11.** **Set image metadata.** Set the alt text and/or caption of an addressed image card, or of the feature image.
 - **FR-12.** **Set article metadata.** Change any of: title, slug, tags (assigning a tag that doesn't exist yet creates it, which is how a new issue tag appears), authors (from FR-6's users), `published_at`, visibility, custom excerpt, meta and social fields, feature-image alt text and caption, and the featured flag. Code injection is excluded (FR-25).
-- **FR-13.** *(Stretch.)* **Create a draft from HTML.** Create a new post or page, as a draft, from supplied HTML, using Ghost's own HTML conversion (D10), with any FR-12 metadata set at creation. If no author is given, or the author has no account, the author is the Claude user.
+- **FR-13.** **Create a draft from HTML.** Create a new post or page, as a draft, from supplied HTML, using Ghost's own HTML conversion (D10), with any FR-12 metadata set at creation. If no author is given, or the author has no account, the author is the Claude user.
 - **FR-14.** Every successful write returns the article's new `updated_at` and enough of the changed region to confirm the edit.
 
 ### 7.3 Write policy
@@ -146,7 +143,7 @@ These requirements are the Gateway's reason to exist. They are enforced by the G
 - **FR-30.** Given a name as it appears in prose (any mix of first, last, nickname or mug name, and class year), return the brothers who might match. Each result carries Book id, name fields, class year, the canonical name Book constructs, the profile URL, and whether the brother is deceased.
 - **FR-31.** The Gateway sees exactly what Book's own rules let a brother-role viewer see, and nothing more: unlisted and de-brothered records never appear. Book enforces this. The Gateway doesn't re-implement it (D12).
 - **FR-32.** The Gateway authenticates to Book with a Google-signed service identity. No Book credential is stored anywhere (D12). Which Book endpoint serves this is decided in Book ticket OFC-484.
-- **FR-35.** *(Stretch.)* **Change feed.** Given a cursor, list the posts and pages changed since then (id, title, status, `updated_at`), mark which changes were the Gateway's own, and return a new cursor (D9).
+- **FR-35.** **Change feed.** Given a cursor, list the posts and pages changed since then (id, title, status, `updated_at`), mark which changes were the Gateway's own, and return a new cursor (D9).
 
 ### 7.5 Logging
 
@@ -156,9 +153,9 @@ These requirements are the Gateway's reason to exist. They are enforced by the G
 
 ### 7.6 Authentication of callers
 
-- **FR-50.** Every call is authenticated as an allow-listed human Google account. In Phase A, that's from Claude Code. Unauthenticated calls are refused.
-- **FR-51.** *(Phase B.)* The Gateway works as a claude.ai custom connector, using OAuth with Google sign-in against the same allow-list. No authless mode exists.
-- **FR-52.** *(Phase B.)* A non-human client (the Linter) can authenticate as its own service identity, logged as such.
+- **FR-50.** Every call is authenticated as an allow-listed human Google account. Unauthenticated calls are refused.
+- **FR-51.** The Gateway works as a claude.ai custom connector, using OAuth with Google sign-in against the same allow-list. No authless mode exists. Every Claude client uses this same remote server; there is no separate local path.
+- **FR-52.** *(After the MVP.)* A non-human client (the Linter) can authenticate as its own service identity, logged as such.
 
 ## 8. Non-functional requirements
 
@@ -170,7 +167,7 @@ These requirements are the Gateway's reason to exist. They are enforced by the G
 - **NFR-6. Cost.** At this volume (a few hundred calls a day at peak, near zero between issues), hosting should cost a few dollars a month at most.
 - **NFR-7. Operability.** Infrastructure is reproducible from scripts in the repo. CI runs the full verification gate on every pull request, and merges deploy staging automatically. Production deploys only as a deliberate release on Forrest's word, following the dev-workflow skill's release process.
 - **NFR-8. Testability.** The write policy (§7.3) is covered by automated tests that try every forbidden operation and expect refusal. Those tests are part of the CI gate.
-- **NFR-9. Accessibility.** Any page a human sees, such as an OAuth sign-in or consent page in Phase B, meets WCAG 2.2 AA in light and dark themes.
+- **NFR-9. Accessibility.** Any page a human sees, such as an OAuth sign-in or consent page, meets WCAG 2.2 AA in light and dark themes.
 - **NFR-10. Privacy.** Book data obtained by the Gateway is used only to answer the request, isn't stored beyond a short cache, and is never written to logs beyond the query and the result count.
 
 ## 9. Environments and cutover
@@ -185,20 +182,21 @@ The Gateway has a **staging** (Gateway-Staging) and a **production** (Gateway-Pr
 
 ## 10. Schedule
 
-| Date | Milestone |
+The Gateway is out of the Fall 2026 critical path, and no substantial work happens on it before that issue is published (D17). Dates after that are set when work resumes.
+
+| When | Milestone |
 |---|---|
-| 2026-10-29 | This PRD (draft 1). |
-| 2026-10-30 | Engineering design, in a fresh session, if Forrest is available (Q3, Q4). |
-| 2026-10-31 to 11-11 | Forrest traveling. Optional autonomous build of Phase 0 (Q4). |
-| 2026-11-12 to 11-19 | Build Phase A against staging. Book's OFC-484, including a Book production release. |
-| ~2026-11-20 | Gateway production cutover. |
-| 2026-11-22 | Fall 2026 content deadline. Editing begins in earnest. |
-| by 2026-12-10 | Fall 2026 published. Phase B begins after. |
+| 2026-10-30 | This PRD (draft 2). Gateway on hold. |
+| by 2026-12-10 | Fall 2026 published, using the interim workflows (§6). |
+| After Fall 2026 is published | Forrest returns to the Gateway. Engineering design in a fresh session, then the full adversarial review, then the coding plan. |
+| Then | Build against staging. Book's OFC-484, including a Book production release. |
+| Before the Spring 2027 content deadline (date to be set) | Gateway production cutover, leaving time to find problems before editing begins. |
+| Spring 2027 | Gateway in editorial production. |
 
 ## 11. Success criteria
 
-For the Fall 2026 issue:
-- Names are canonicalized and linked, and images given alt text, through the Gateway on most of the issue's articles, and Forrest judges it a real time saving.
+For the Spring 2027 issue:
+- Names are canonicalized and linked, and images given alt text, through the Gateway on most of the issue's articles, and Forrest judges it a real time saving over the Fall 2026 interim workflows.
 - The logs show **zero** writes to any article that wasn't a draft, and zero successful status changes or deletes.
 - The Ghost token appears in no transcript, tool result, log line or commit.
 - No edit by Forrest or Claude is silently lost to a collision.
@@ -219,8 +217,9 @@ Facts this design leans on that haven't been verified yet. Each is checked on st
 
 - **Q1. Pre-write snapshots (FR-42).** *Recommendation: yes.* Only the Gateway's own writes are snapshotted, never Forrest's edits in the Ghost editor. Compressed, an issue's worth (30 articles × about 20 writes) is a few megabytes. Store them in a Cloud Storage bucket that deletes them after about 90 days, with each log line pointing to its snapshot. Cost: well under a dollar a year. Forrest's call.
 - **Q2. Book endpoint shape (FR-32).** Fill in Book's existing `GET /api/roster` and let the Gateway match candidates itself, or add a server-side search endpoint to Book? *Recommendation: the roster*, which is designed, its authentication built, and smaller. Decided at OFC-484's plan gate.
-- **Q3. Adversarial review depth.** The design methodology calls for several independent review passes. Given the deadline: *recommendation* is one security-focused pass on the engineering design (credential, authentication, the write policy, FR-25) before building, with the other angles after 2026-12-10.
-- **Q4. Using the travel window.** If the engineering design and coding plan are approved by 2026-10-30, autonomous sessions could build Phase 0 and the walking skeleton between 2026-10-31 and 11-11, stopping with PRs ready for Forrest on 11-12. It is ambitious, and it draws on extra usage. Forrest's call.
-- **Q5. The canonical-name rule.** For names to be useful in the MVP, Claude needs Forrest's rule written down: the format, first mention versus later ones, and what gets linked. It belongs to the assistant editor, not the Gateway, but the MVP's value depends on it.
+- **Q3.** *Closed by D17.* With the deadline gone, the design gets the methodology's full adversarial review, not a compressed one.
+- **Q4.** *Closed by D17.* There is no autonomous build during Forrest's November travel.
+- **Q5. The canonical-name rule.** For names to be useful in the MVP, Claude needs Forrest's rule written down: the format, first mention versus later ones, and what gets linked. It belongs to the assistant editor, not the Gateway, but the MVP's value depends on it. Forrest's Fall 2026 name tool will have to encode this rule anyway, so that tool can become its written source.
 - **Q6. Active content (FR-25).** Confirm that Claude should never be able to add scripts, raw HTML cards or code injection, even to a draft. The cost: any article that needs an embed gets it from Forrest by hand.
-- **Q7. Duet and connectors.** Confirm, before Phase B starts, that Duet can use a claude.ai custom connector, and what it does with tool-permission settings.
+- **Q7. Duet and connectors.** Confirm, at the start of the engineering design, that Duet can use a claude.ai custom connector, and what it does with tool-permission settings. Duet is now in the MVP, so this is the first thing to settle.
+- **Q8. Who canonicalizes names in Spring 2027.** A Claude session working through the Gateway (§5), the Linter (§4), or logic carried over from Forrest's Fall 2026 name tool? The Gateway's operations are the same in each case, so this doesn't block the design. It decides whether the Linter needs to be on the Spring 2027 path at all.

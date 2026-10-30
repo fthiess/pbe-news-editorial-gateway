@@ -2,7 +2,7 @@
 
 A remote MCP server that gives Claude (Claude Code, Claude Duet, claude.ai, cloud Routines) and the planned PBE News Linter editorial access to the PBE News Ghost site: read posts and pages, create drafts, edit drafts. It holds the Ghost credential server-side and enforces the write policy in code. Sibling projects live in the parent `PBE News/` workspace (see its `CLAUDE.md`); Book (`pbe-address-book`) supplies the brother roster.
 
-**Phase:** design. `docs/PRD.md` is drafted; the engineering design comes next, in its own session. No code yet.
+**Phase:** design, **on hold until the Fall 2026 issue is published** (D17); the target is editorial production for Spring 2027. `docs/PRD.md` is drafted; the engineering design comes next when work resumes, in its own session. No code yet.
 
 ## Development workflow
 

@@ -13,8 +13,8 @@ Chains run oldest → newest; **bold** marks the current word on a matter; ~~str
 
 - Consumers: **D2** (Duet, Claude Code, claude.ai web, cloud Routines, the Linter).
 - Scope: **D3** (editorial access, not admin, not the assistant editor).
-- MVP & phases: **D15** (names + alt text define the MVP; Phase A Claude Code, Phase B OAuth connector).
-- Judgment vs. Linter: **D14** (alt text and finding names are Claude's; the Linter is off the Fall 2026 critical path).
+- MVP & schedule: D15 (names + alt text define the MVP) → **D17** (on hold until Fall 2026 is published; Spring 2027 target; one MVP for all Claude clients, Phases A and B merged).
+- Judgment vs. Linter: D14 → **D17** (alt text stays out of the Linter; who canonicalizes names for Spring 2027 is open, PRD Q8).
 
 ## Identity & authentication
 

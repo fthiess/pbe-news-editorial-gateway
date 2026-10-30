@@ -64,10 +64,26 @@ The Gateway logs every action it takes: who called it, from which client, which 
 Writing alt text comes out of the Linter: the Linter stays deterministic code, and the Claude session that runs it writes the alt text, using the Gateway's image read. For the Fall 2026 issue, Claude sessions also do name canonicalization directly (find names in the prose, resolve them through D12, edit the draft), so the Gateway doesn't depend on the Linter, which hasn't been started.
 **Why:** Alt text needs a model. Putting one inside the Linter would add an Anthropic API key, a separate API bill and non-reproducible output to a tool whose value is being algorithmic. Finding names in free text is also judgment-heavy, and a Claude session can do it with the Gateway's tools today. That takes an entire unstarted project off the critical path for the Fall issue. The Linter can later make name handling cheaper and more consistent.
 
+*Later updated by: D17 (the Fall 2026 clause no longer applies; who canonicalizes names for Spring 2027 is open).*
+
 ### D15 — MVP definition and phasing (Forrest's call)
 Name canonicalization (with Book profile links) and image alt text are, by Forrest's definition, the MVP: without them the Gateway isn't worth building before the Fall 2026 issue. The MVP is **Phase A**, built for Claude Code. It contains reading, image reading, the two narrow edits those tasks need (replace a span of text, adding a link; set an image's alt text and caption), metadata edits, the draft-only policy, collision checks, Book lookup and logging. **Phase B**, after the Fall issue is published, adds OAuth for the claude.ai connector, bringing Duet, web and Routines. Draft creation from HTML (D10) and the change feed (D9) are stretch goals for Phase A, and general editing and image upload come later. Approved with Forrest's "go ahead" on 2026-10-29.
 **Why:** Forrest is away 2026-10-31 to 11-11, the content deadline is 11-22, and publication is by 12-10. That leaves about eight working days to build. Every Fall-issue need above is served from Claude Code. The OAuth flow a connector needs is the riskiest, most security-sensitive single component, and keeping it off the deadline's critical path is the main schedule lever. Phase A keeps every guardrail server-side: the Ghost credential never leaves Cloud Run in either phase. The two edit types are also far narrower than general card-preserving editing, which is the hardest technical problem in the project.
 
+*Later updated by: D17 (target moved to Spring 2027; Phases A and B merged into one MVP).*
+
 ### D16 — Repository: public, named `pbe-news-editorial-gateway`; "Gateway" for short (Forrest's call)
 The project lives in its own public GitHub repo, `fthiess/pbe-news-editorial-gateway`, like Book, under the MIT license. Its internal shorthand is "Gateway". Linear work goes in project PBE-Gateway (team Techgnosys).
 **Why:** Same posture as Book: the code has nothing to hide, and its safety must not rest on secrecy. Being public puts the "no secrets, no brother names" invariants in `CLAUDE.md` on the critical path.
+
+---
+
+## Session 2 — Replan after PRD review (2026-10-30)
+
+### D17 — The Gateway leaves the Fall 2026 critical path and targets Spring 2027 (Forrest's call); one MVP replaces Phases A and B
+No substantial work happens on the Gateway until the Fall 2026 issue is published. Forrest then returns to it with the aim of using it in editorial production for the **Spring 2027** issue. For Fall 2026, he gets alt text by pasting images into Claude Haiku and pasting the results into Ghost, and he canonicalizes names with a separate small tool, either a Python script with a web interface or a Chrome extension. Neither depends on the Gateway. This amends D15 and the Fall 2026 clause of D14. Consequences:
+- **One MVP, not two phases.** Everything previously in Phase A and its stretch goals, plus the claude.ai connector (OAuth), is one MVP for all Claude clients. FR-52, the Linter's identity, waits until the Linter exists. General editing, image upload and webhooks stay after the MVP.
+- **Review and travel-window questions close.** The design gets the methodology's full adversarial review, and there is no autonomous build in November.
+- **Who canonicalizes names for Spring 2027 is open** (PRD Q8). D14's alt-text decision stands.
+- D14's reasoning that alt text needs a model is unchanged. Forrest's test adds a useful data point: Claude Haiku wrote good enough alt text for typical PBE News images.
+**Why:** Forrest's parallel projects and personal commitments over the next six weeks or so make the November build unrealistic. The interim workflows are still a big improvement on Spring 2026 and he's comfortable with them, so the Gateway isn't needed for the Fall issue. The two-phase split existed only to keep OAuth off that deadline's critical path, and its Phase A needed a temporary local helper for Claude Code. With the deadline gone, that split would mean building a throwaway authentication path for no benefit, and Duet, the client that motivated the project, would still wait. The merge into one MVP is Claude's recommendation from the replan, carried out under Forrest's instruction to update the feature triage. It is his to reverse.
