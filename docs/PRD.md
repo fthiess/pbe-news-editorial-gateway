@@ -18,27 +18,28 @@ The Gateway is plumbing. What the assistant editor *does* with these tools is a 
 
 ### 2.1 Environments
 
-- **Live:** pbe400.org on Ghost(Pro). Real member data. Mixpanel analytics are live. The Gateway touches it only after a deliberate cutover (§9).
-- **Staging:** staging.pbe400.org, self-hosted Ghost on Forrest's GCP VM (gladstone). Its member list is fake (`@example.test`) and its bulk email is permanently disabled. It is the Gateway's development and test target.
-- **Book** (book.pbe400.org, and Book staging) is the members-only brother directory. It is the system of record for brothers' names, class years and Constitution IDs, and it enforces field visibility by role in server-side projection.
+- **Live ("Ghost-Prod"):** pbe400.org on Ghost(Pro). Real member data. Mixpanel analytics are live. The Gateway touches it only after a deliberate cutover (§9).
+- **Staging ("Ghost-Staging"):** staging.pbe400.org, self-hosted Ghost on Forrest's GCP VM (gladstone). Its member list is fake (`@example.test`) and its bulk email is permanently disabled. It is the Gateway's development and test target.
+- **Book** (book.pbe400.org ("Book-Prod"), and book-staging.pbe400.org ("Book-Staging")) is the members-only brother directory. It is the system of record for brothers' names, class years and Constitution IDs, and it enforces field visibility by role in server-side projection.
+- **gladstone**: Google Cloud VM Linux machine owned by Forrest that's used for various things. Ghost-Staging runs on gladstone, as does the Mixpanel proxy service.
 
 ### 2.2 How an issue is put together in Ghost
 
 These are Forrest's conventions. The assistant editor applies them; the Gateway doesn't enforce them (D3), but it must be able to read and write every field they use.
 
 - An article belongs to an issue through an **issue tag**, written year first (for example `#2026-spring`).
-- Further tags place an article in a **section**.
-- **Slugs** begin with the issue identifier (for example `spring-2026-from-the-editor`).
+- Further tags place an article in a **section** (e.g. `#1corp`, `#4reunion`; the leading digit orders the sections within an issue).
+- **Slugs** begin with the issue identifier (for example `2026-spring-from-the-editor`).
 - Within a section, articles are ordered by **publication date and time**, which Forrest sets by hand to get the order he wants.
-- **Bylines:** every author is a Ghost Contributor account, usually a placeholder Forrest creates under a plus-address of his own, because few authors log in to Ghost. Creating those accounts is user management and stays with Forrest. When an author has no account yet, Claude sets itself as the author until Forrest resolves it.
-- **Email:** only the lead article, Forrest's "From the Editor", is ever sent by email. Readers reach every other article through its links.
-- **TK** ("to come") marks open items. It is the literal string `TK` anywhere in an article, alone or inside a note such as `[TK add image]`. Ghost's editor flags every occurrence.
+- **Bylines:** every author is a Ghost Contributor account, usually a placeholder Forrest creates under a plus-address of his own email, because few authors log in to Ghost today. Creating those accounts is user management and stays with Forrest. When an author has no account yet, Claude sets itself as the author until Forrest resolves it.
+- **Email:** only the lead article, Forrest's "From the Editor", is ever sent by email. Readers reach every other article through its links or by going to the Ghost Prod website directly.
+- **TK** ("[to come](https://en.wikipedia.org/wiki/To_come_(publishing))") marks open items. It is the literal string `TK` anywhere in an article, alone or inside a note such as `[TK add image]`. Ghost's editor flags every occurrence.
 
 ### 2.3 Ghost constraints
 
-- The Ghost(Pro) plan allows three staff users. Forrest and the backup editor hold two. The third goes to Claude, as an **Editor** (D4). A Contributor would be no use: contributors see only their own drafts.
+- The current Ghost(Pro) plan allows three staff users. Forrest and the backup editor hold two. The third goes to Claude, as an **Editor** (D4). A Contributor would be no use: contributors see only their own drafts.
 - Ghost 5 and later store content as **Lexical JSON**, with "cards" for images, galleries, bookmarks, callouts and similar. Converting HTML to Lexical is fine for creating an article (D10). Round-tripping an existing article through HTML would damage its cards, so **edits to existing content must preserve its structure** (FR-10).
-- Ghost(Pro) can't be modified, which rules out plugins and custom fields. Editorial status lives outside Ghost (D3).
+- Ghost(Pro) is a hosted service whose code can't be modified, which rules out plugins and custom fields. Editorial status lives outside Ghost (D3).
 
 ## 3. Goals and non-goals
 
@@ -61,7 +62,7 @@ These are Forrest's conventions. The assistant editor applies them; the Gateway 
 
 ## 4. Users and clients
 
-**Human editors.** Forrest today. The backup editor is expected soon, so the design must admit more than one human without change (D6). Each human signs in with their own Google account, on an allow-list.
+**Human editors.** Forrest today. Another editor may contribute soon, so the design must admit more than one human without change (D6). Each human signs in with their own Google account, on an allow-list.
 
 **Claude clients** act for a human editor, all through the one Claude Ghost identity (D4, D6):
 
@@ -72,18 +73,18 @@ These are Forrest's conventions. The assistant editor applies them; the Gateway 
 | Claude Duet | B | Proactive assistant editor: intake from Forrest's email, noticing changes, proposing next steps. |
 | Cloud Routines | B | Scheduled or unattended runs, such as an overnight TK list. |
 
-**The PBE News Linter** is a later, programmatic client (D2). It is deterministic code that applies mechanical fixes to drafts. It needs the same read and edit operations, under a non-human identity.
+**The PBE News Linter** is a later, programmatic client (D2). It is deterministic program that applies mechanical fixes to drafts, including changes to conform to house style and canonicalizing brother names. It needs the same read and edit operations, under a non-human identity.
 
 ## 5. Driving use cases
 
 None of these is built *into* the Gateway, but each must be possible *through* it. They test the interface.
 
-1. **Name canonicalization (MVP).** Claude reads a draft, finds each mention of a brother, asks the Gateway which brothers match ("James Smyth '84", say), decides which one is meant, and rewrites the mention in canonical form with a link to that brother's Book profile. This needs: read the article with precise addresses, Book lookup, and a structure-preserving "replace this text span with this linked text" edit.
+1. **Name canonicalization (MVP).** Claude reads a draft, finds each mention of a brother, asks the Gateway which brothers match (e.g. given "Jim Smyth" returning "James Smyth '84" and "James Smith '32"), decides which brother is meant, and rewrites the mention in canonical form with a link to that brother's Book profile. This needs: read the article with precise addresses, Book lookup, and a structure-preserving "replace this text span with this linked text" edit.
 2. **Alt text and captions (MVP).** Claude finds every image in a draft, including the feature image, looks at each one, and writes alt text (and a caption, where one is missing and the context supplies it). This needs: read images as pictures, and set alt text and captions.
-3. **Edits on request.** Forrest asks for a change, Claude suggests it, and Forrest says "yes, please make that change". On a draft, Claude makes it. On a published article, Forrest unpublishes it first (D7). The MVP covers text-span replacement and metadata edits; general editing comes later.
+3. **Edits on request.** Forrest asks for a change, Claude suggests wording, and Forrest says "yes, please make that change". On a draft, Claude makes it. On a published article, Forrest unpublishes it first and re-publishes it when the change is complete (D7). The MVP covers text-span replacement and metadata edits; general editing comes later.
 4. **Intake (stretch).** Claude reads a submission in Forrest's email, extracts the article as HTML, and creates a draft with its metadata: issue and section tags, slug, author, ordering date, and `[TK image: …]` markers where photos belong (D10, D11).
 5. **TK list.** Claude reads all of an issue's drafts and lists every TK. This needs only reads.
-6. **Pre-publication readiness checks.** For example: the metadata is complete and matches the issue, there are no TKs, and every image has a caption and alt text. This needs only reads, but the reads must expose every field involved.
+6. **Pre-publication readiness checks.** For example: the metadata is complete, conforms to standards, and matches the issue, there are no TKs, and every image has a caption and alt text. This needs only reads, but the reads must expose every field involved.
 7. **Noticing change (stretch).** Duet asks what changed since it last looked, and decides on a next step, such as offering to lint a new draft (D9).
 
 ## 6. Scope and phasing
@@ -174,13 +175,13 @@ These requirements are the Gateway's reason to exist. They are enforced by the G
 
 ## 9. Environments and cutover
 
-The Gateway has a **staging** and a **production** deployment, each in its own GCP project. Staging pairs with ghost-staging and Book staging. Production pairs with pbe400.org and Book production. Profile links always point at the Book of the same environment.
+The Gateway has a **staging** (Gateway-Staging) and a **production** (Gateway-Prod) deployment, each in its own GCP project. Staging pairs with Ghost-Staging and Book-Staging. Production pairs with Ghost-Prod and Book-Prod. Profile links always point at the Book of the same environment.
 
 **Staging content.** To test on realistic material, the published Fall 2025 and Spring 2026 articles and pages are copied from production into ghost-staging (Forrest's call). **Only posts and pages: never members, never member data.** Staging's fake member list and disabled bulk email stay exactly as they are. Whether images are copied or left pointing at production URLs is for the engineering design to settle.
 
 **Claude's Ghost user.** On staging, a Claude Editor user is created freely. On production, it takes the third staff slot, and Forrest creates it.
 
-**Cutover.** The Gateway touches pbe400.org only after it has been live-tested on staging and Forrest gives the word. Cutover follows the dev-workflow skill's `launch-and-cutover.md`, scaled to a read-mostly service: a written rollback (revoke the Claude user's token), and a first-hour watch of the logs for any refusal or error that wasn't expected.
+**Cutover.** The Gateway touches Ghost-Prod only after it has been live-tested on staging and Forrest gives the word. Cutover follows the dev-workflow skill's `launch-and-cutover.md`, scaled to a read-mostly service: a written rollback (revoke the Claude user's token), and a first-hour watch of the logs for any refusal or error that wasn't expected.
 
 ## 10. Schedule
 
