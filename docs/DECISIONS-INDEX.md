@@ -13,8 +13,8 @@ Chains run oldest → newest; **bold** marks the current word on a matter; ~~str
 
 - Consumers: **D2** (Duet, Claude Code, claude.ai web, cloud Routines, the Linter).
 - Scope: **D3** (editorial access, not admin, not the assistant editor).
-- MVP & schedule: D15 (names + alt text define the MVP) → **D17** (on hold until Fall 2026 is published; Spring 2027 target; one MVP for all Claude clients, Phases A and B merged).
-- Judgment vs. Linter: D14 → **D17** (alt text stays out of the Linter; who canonicalizes names for Spring 2027 is open, PRD Q8).
+- MVP & schedule: D15 (names + alt text define the MVP) → **D17** (on hold until Fall 2026 is published; Spring 2027 target; one MVP for all Claude clients, Phases A and B merged) → **D18** (the Linter's identity and the whole roster join the MVP).
+- Judgment vs. Linter: D14 → D17 → **D18** (alt text stays out of the Linter; the Linter canonicalizes names, leaving unresolved mentions to Claude or Forrest).
 
 ## Identity & authentication
 
@@ -34,7 +34,7 @@ Chains run oldest → newest; **bold** marks the current word on a matter; ~~str
 
 ## Book
 
-- Roster lookup: **D12** (service-to-service Google identity; Book's projection governs; endpoint shape open in OFC-484).
+- Roster lookup: **D12** (service-to-service Google identity; Book's projection governs; endpoint shape open in OFC-484) + **D18** (programmatic clients can fetch the whole roster).
 
 ## Observability
 

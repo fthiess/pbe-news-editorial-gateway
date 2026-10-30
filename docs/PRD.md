@@ -1,6 +1,6 @@
 # PBE News Editorial Gateway ("Gateway") — Product Requirements Document
 
-**Status:** Draft 2, 2026-10-30. On hold until the Fall 2026 issue is published; the target is editorial production for the **Spring 2027** issue (D17). Requirements only; *how* each one is met belongs to the engineering design, which follows when work resumes. Decisions cited as `D<n>` are in [`DECISIONS.md`](DECISIONS.md), which is authoritative where this document and the log disagree.
+**Status:** Draft 3, 2026-10-30. On hold until the Fall 2026 issue is published; the target is editorial production for the **Spring 2027** issue (D17). Requirements only; *how* each one is met belongs to the engineering design, which follows when work resumes. Decisions cited as `D<n>` are in [`DECISIONS.md`](DECISIONS.md), which is authoritative where this document and the log disagree.
 
 ---
 
@@ -68,18 +68,18 @@ These are Forrest's conventions. The assistant editor applies them; the Gateway 
 
 | Client | Typical use |
 |---|---|
-| Claude Code (desktop app) | Interactive editing sessions with Forrest: names, alt text, other edits on request. |
+| Claude Code (desktop app) | Interactive editing sessions with Forrest: alt text, running the Linter, other edits on request. |
 | claude.ai (web) | The same, from a browser. |
 | Claude Duet | Proactive assistant editor: intake from Forrest's email, noticing changes, proposing next steps. |
 | Cloud Routines | Scheduled or unattended runs, such as an overnight TK list. |
 
-**The PBE News Linter** is a later, programmatic client (D2). It is a deterministic program that applies mechanical fixes to drafts, including changes to conform to house style and canonicalizing brother names. It needs the same read and edit operations, under a non-human identity.
+**The PBE News Linter** is a programmatic client (D2), designed and built as a separate project. It is a deterministic program that applies mechanical fixes to drafts, including changes to conform to house style and canonicalizing brother names (D18). It needs the same read and edit operations, plus the whole Book roster, under a non-human identity.
 
 ## 5. Driving use cases
 
 None of these is built *into* the Gateway, but each must be possible *through* it. They test the interface.
 
-1. **Name canonicalization.** Claude reads a draft, finds each mention of a brother, asks the Gateway which brothers match (e.g. given "Jim Smyth" returning "James Smyth '84" and "James Smith '32"), decides which brother is meant, and rewrites the mention in canonical form with a link to that brother's Book profile. This needs: read the article with precise addresses, Book lookup, and a structure-preserving "replace this text span with this linked text" edit.
+1. **Name canonicalization.** The Linter reads a draft, finds each mention of a brother by matching against Book's roster (e.g. given "Jim Smyth", finding "James Smyth '84" and "James Smith '32"), and rewrites the mention in canonical form with a link to that brother's Book profile (D18). A mention it can't resolve to one brother is left for Claude or Forrest to decide, using the same lookup and edit operations. This needs: read the article with precise addresses, the whole roster for the Linter and name lookup for Claude, and a structure-preserving "replace this text span with this linked text" edit.
 2. **Alt text and captions.** Claude finds every image in a draft, including the feature image, looks at each one, and writes alt text (and a caption, where one is missing and the context supplies it). This needs: read images as pictures, and set alt text and captions.
 3. **Edits on request.** Forrest asks for a change, Claude suggests wording, and Forrest says "yes, please make that change". On a draft, Claude makes it. On a published article, Forrest unpublishes it first and re-publishes it when the change is complete (D7). The MVP covers text-span replacement and metadata edits; general editing comes later.
 4. **Intake.** Claude reads a submission in Forrest's email, extracts the article as HTML, and creates a draft with its metadata: issue and section tags, slug, author, ordering date, and `[TK image: …]` markers where photos belong (D10, D11).
@@ -99,11 +99,14 @@ With no build deadline before Fall 2026, the Gateway's earlier split into a Clau
 - Draft edits: replace a text span, with or without a link (FR-10); set alt text and captions (FR-11); set metadata (FR-12).
 - Create a draft from HTML (FR-13).
 - The write policy and collision check (FR-20 to FR-26).
-- Book lookup (FR-30 to FR-32) and the change feed (FR-35).
+- Book lookup and the whole roster (FR-30 to FR-33), and the change feed (FR-35).
 - Logging (FR-40 to FR-42).
 - Authentication of allow-listed Google identities (FR-50), including as a claude.ai custom connector (FR-51), which brings Claude Code, Duet, web and Routines together.
+- A non-human identity for the Linter (FR-52).
 
-**After the MVP:** a non-human identity for the Linter, once the Linter exists (FR-52); general structure-preserving editing (moving, inserting and deleting blocks); image upload and placement (D11); webhooks (D9).
+The Linter itself is a separate project, but name canonicalization in production depends on it (D18), so the Spring 2027 goal needs its name handling ready alongside the Gateway.
+
+**After the MVP:** general structure-preserving editing (moving, inserting and deleting blocks); image upload and placement (D11); webhooks (D9).
 
 ## 7. Functional requirements
 
@@ -143,6 +146,7 @@ These requirements are the Gateway's reason to exist. They are enforced by the G
 - **FR-30.** Given a name as it appears in prose (any mix of first, last, nickname or mug name, and class year), return the brothers who might match. Each result carries Book id, name fields, class year, the canonical name Book constructs, the profile URL, and whether the brother is deceased.
 - **FR-31.** The Gateway sees exactly what Book's own rules let a brother-role viewer see, and nothing more: unlisted and de-brothered records never appear. Book enforces this. The Gateway doesn't re-implement it (D12).
 - **FR-32.** The Gateway authenticates to Book with a Google-signed service identity. No Book credential is stored anywhere (D12). Which Book endpoint serves this is decided in Book ticket OFC-484.
+- **FR-33.** A programmatic client such as the Linter can fetch the whole roster that FR-31 allows, to match names locally, with the same fields as FR-30 (D18; Book D58).
 - **FR-35.** **Change feed.** Given a cursor, list the posts and pages changed since then (id, title, status, `updated_at`), mark which changes were the Gateway's own, and return a new cursor (D9).
 
 ### 7.5 Logging
@@ -155,7 +159,7 @@ These requirements are the Gateway's reason to exist. They are enforced by the G
 
 - **FR-50.** Every call is authenticated as an allow-listed human Google account. Unauthenticated calls are refused.
 - **FR-51.** The Gateway works as a claude.ai custom connector, using OAuth with Google sign-in against the same allow-list. No authless mode exists. Every Claude client uses this same remote server; there is no separate local path.
-- **FR-52.** *(After the MVP.)* A non-human client (the Linter) can authenticate as its own service identity, logged as such.
+- **FR-52.** A non-human client (the Linter) can authenticate as its own service identity, logged as such.
 
 ## 8. Non-functional requirements
 
@@ -189,7 +193,7 @@ The Gateway is out of the Fall 2026 critical path, and no substantial work happe
 | 2026-10-30 | This PRD (draft 2). Gateway on hold. |
 | by 2026-12-10 | Fall 2026 published, using the interim workflows (§6). |
 | After Fall 2026 is published | Forrest returns to the Gateway. Engineering design in a fresh session, then the full adversarial review, then the coding plan. |
-| Then | Build against staging. Book's OFC-484, including a Book production release. |
+| Then | Build against staging. Book's OFC-484, including a Book production release. The Linter's name canonicalization, as its own project (D18). |
 | Before the Spring 2027 content deadline (date to be set) | Gateway production cutover, leaving time to find problems before editing begins. |
 | Spring 2027 | Gateway in editorial production. |
 
@@ -216,10 +220,10 @@ Facts this design leans on that haven't been verified yet. Each is checked on st
 ## 13. Open questions
 
 - **Q1. Pre-write snapshots (FR-42).** *Recommendation: yes.* Only the Gateway's own writes are snapshotted, never Forrest's edits in the Ghost editor. Compressed, an issue's worth (30 articles × about 20 writes) is a few megabytes. Store them in a Cloud Storage bucket that deletes them after about 90 days, with each log line pointing to its snapshot. Cost: well under a dollar a year. Forrest's call.
-- **Q2. Book endpoint shape (FR-32).** Fill in Book's existing `GET /api/roster` and let the Gateway match candidates itself, or add a server-side search endpoint to Book? *Recommendation: the roster*, which is designed, its authentication built, and smaller. Decided at OFC-484's plan gate.
+- **Q2. Book endpoint shape (FR-32).** Fill in Book's existing `GET /api/roster` and let the Gateway match candidates itself, or add a server-side search endpoint to Book? *Recommendation: the roster*, which is designed, its authentication built, and smaller, and which FR-33 needs in any case now that the Linter does the matching (D18). Decided at OFC-484's plan gate.
 - **Q3.** *Closed by D17.* With the deadline gone, the design gets the methodology's full adversarial review, not a compressed one.
 - **Q4.** *Closed by D17.* There is no autonomous build during Forrest's November travel.
-- **Q5. The canonical-name rule.** For names to be useful in the MVP, Claude needs Forrest's rule written down: the format, first mention versus later ones, and what gets linked. It belongs to the assistant editor, not the Gateway, but the MVP's value depends on it. Forrest's Fall 2026 name tool will have to encode this rule anyway, so that tool can become its written source.
+- **Q5. The canonical-name rule.** For names to be useful in the MVP, the Linter needs Forrest's rule written down: the format, first mention versus later ones, and what gets linked. It belongs to the Linter, not the Gateway, but the MVP's value depends on it. Forrest's Fall 2026 name tool will have to encode this rule anyway, so that tool can become its written source.
 - **Q6. Active content (FR-25).** Confirm that Claude should never be able to add scripts, raw HTML cards or code injection, even to a draft. The cost: any article that needs an embed gets it from Forrest by hand.
 - **Q7. Duet and connectors.** Confirm, at the start of the engineering design, that Duet can use a claude.ai custom connector, and what it does with tool-permission settings. Duet is now in the MVP, so this is the first thing to settle.
-- **Q8. Who canonicalizes names in Spring 2027.** A Claude session working through the Gateway (§5), the Linter (§4), or logic carried over from Forrest's Fall 2026 name tool? The Gateway's operations are the same in each case, so this doesn't block the design. It decides whether the Linter needs to be on the Spring 2027 path at all.
+- **Q8.** *Closed by D18.* The Linter does name canonicalization.
